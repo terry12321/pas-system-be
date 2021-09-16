@@ -4,6 +4,9 @@ var bodyParser = require("body-parser");
 var http = require("http");
 var cors = require("cors");
 const qp = require("@flexsolver/flexqp2");
+const rb = require("@flexsolver/flexrb");
+const passport = require('passport');
+
 qp.presetConnection(require(`./dbconfig.json`)); // Setting up connection to mysql
 
 /**Set up server to http and use express */
@@ -15,12 +18,20 @@ var corsOptions = {
 };
 
 /**Initialise necessary npm(s)*/
-app.use(bodyParser.json());
+rb.setQpDriver(qp);
+app.use(express.json());
 app.use("/assets", express.static(__dirname + "/public"));
 app.set("view engine", "ejs");
 // parse requests of content-type - application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
+//Need to require the authenticate module so that app.js knows about it
+require('./authenticate');
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+
+
 
 // /** Setting up connection to mysql */
 // var mysqlConnection = mysql.createConnection({
