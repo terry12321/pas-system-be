@@ -10,11 +10,11 @@ const config = require('./config');
 
 
 
-passport.use(new LocalStrategy(async (username, password, done) => {
+passport.use(new LocalStrategy( async (username, password, done) => {
     const user = await qp.selectFirst(`SELECT * FROM account WHERE username = ?`, [username]);
-    const match = await bcrypt.compareSync(password, user.password);
+    const match = bcrypt.compareSync(password, user.password);
     if (user && match) {
-        const { ...result } = user;
+        const { password,...result } = user;
         return done(null, result);
     }
     if (!user) {
@@ -34,7 +34,7 @@ passport.deserializeUser((user, done) => {
 });
 
 exports.getToken = function(user){
-    return jwt.sign(user, config.secretKey, 
+    return jwt.sign(user, config.JWT_SECRET, 
         {expiresIn: 3600});
 };
 

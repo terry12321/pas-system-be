@@ -7,12 +7,11 @@ const authenticate = require('../../authenticate');
 
 
 
-router.post('/', async (req, res, next) => {
-    await passport.authenticate('local', (err, user) => {
+router.post('/', (req, res, next) => {
+    passport.authenticate('local', (err, user) => {
         if (err) {
             res.status(err.status).send(formatError(err.message, err.status));
         }
-
         if (user) {
             let token = authenticate.getToken(user);
             let result = {
