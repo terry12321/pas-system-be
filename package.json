@@ -1,31 +1,33 @@
 {
-  "name": "pas-system-be",
-  "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app.js"
-  },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "nodemon": "^2.0.12"
-  },
-  "dependencies": {
-    "@flexsolver/flexqp2": "^2.11.2",
-    "@flexsolver/flexrb": "^1.0.6",
-    "bcrypt": "^5.0.1",
-    "body-parser": "^1.19.0",
-    "cors": "^2.8.5",
-    "ejs": "^3.1.6",
-    "express": "^4.17.1",
-    "http-errors": "^1.8.0",
-    "jsonwebtoken": "^8.5.1",
-    "moment": "^2.29.1",
-    "mysql": "^2.18.1",
-    "passport": "^0.4.1",
-    "passport-jwt": "^4.0.0",
-    "passport-local": "^1.0.0"
-  }
+    "name": "pas-system-be",
+    "version": "1.0.0",
+    "description": "",
+    "main": "app.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "nodemon app.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "nodemon": "^2.0.12"
+    },
+    "dependencies": {
+        "@flexsolver/flexqp2": "^2.11.2",
+        "@flexsolver/flexrb": "^1.0.6",
+        "bcrypt": "^5.0.1",
+        "body-parser": "^1.19.0",
+        "cors": "^2.8.5",
+        "ejs": "^3.1.6",
+        "express": "^4.17.1",
+        "http-errors": "^1.8.0",
+        "jsonwebtoken": "^8.5.1",
+        "moment": "^2.29.1",
+        "mysql": "^2.18.1",
+        "node-persist": "^3.1.0",
+        "passport": "^0.4.1",
+        "passport-jwt": "^4.0.0",
+        "passport-local": "^1.0.0",
+        "uuid": "^8.3.2"
+    }
 }
