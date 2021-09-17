@@ -1,6 +1,6 @@
 {
     "host": "localhost",
-    "user": "SWE_User",
+    "user": "DBAdmin",
     "password": "Passw0rd!@#",
     "database": "software_engineering"
 }
