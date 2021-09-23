@@ -10,9 +10,9 @@ router.post("/", (req, res, next) => {
     passport.authenticate("local", async (err, user) => {
         if (err) {
             if (!err.status) {
-                res.status(500).send(formatError(err.message, 500));
+                res.status(500).send(formatError(500, err.message));
             } else {
-                res.status(err.status).send(formatError(err.message, err.status));
+                res.status(err.status).send(formatError(err.status, err.message));
             }
         }
         if (user) {

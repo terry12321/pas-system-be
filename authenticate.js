@@ -9,18 +9,20 @@ const createError = require("http-errors");
 const config = require("./config");
 const uuid = require("uuid");
 const storage = require("node-persist");
+const formatError = require("./common/error_formatter");
 
 passport.use(
     new LocalStrategy(async (username, password, done) => {
         try {
             const user = await qp.selectFirst(`SELECT * FROM account WHERE username = ?`, [username]);
+            if (!user) {
+                return done(createError(401, "Username not found!"), null);
+            }
+
             const match = bcrypt.compareSync(password, user.password);
             if (user && match) {
                 const { password, ...result } = user;
                 return done(null, result);
-            }
-            if (!user) {
-                return done(createError(401, "Username not found!"), null);
             }
             if (user.password !== password) {
                 return done(createError(401, "Incorrect password!"), null);
@@ -61,11 +63,16 @@ passport.use(
             let token = req.headers.authorization;
             token = token.replace(`Bearer `, "");
             let user = await storage.getItem(token);
+            if (user === null || user === undefined) {
+                throw new Error(`You are not authorized, please login again`);
+            }
             return done(null, user);
         } catch (err) {
             //catch if token expire or not generated
             // remove user
             // remove storage user
+            storage.removeItem(token);
+            req.user = null;
             console.log(err);
             return done(err);
         }
@@ -81,7 +88,7 @@ passport.use(
 exports.verifyUser = (req, res, next) => {
     passport.authenticate("jwt", { session: false }, (err, user, info) => {
         if (!user) {
-            res.status(401).json(createError(401, info));
+            res.status(401).json(formatError(401, info.message));
         } else {
             req.user = user;
             next();
