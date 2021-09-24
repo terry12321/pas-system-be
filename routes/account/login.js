@@ -19,12 +19,12 @@ router.post("/", (req, res, next) => {
             let token = authenticate.getToken();
             let result = {
                 token,
-                ttl: 60 * 60
+                ttl: 60 * 30
             };
 
             //Use token as the key and user as the value
             //stores user in local storage
-            await storage.setItem(token, user, { ttl: 60 * 60 * 1000 });
+            await storage.setItem(token, user, { ttl: 60 * 30 });
 
             res.json(rb.build(result));
         }

@@ -48,7 +48,7 @@ passport.deserializeUser((user, done) => {
 exports.getToken = function () {
     let id = uuid.v4();
     id = id.replace(/-/g, "");
-    return jwt.sign({ data: id }, config.JWT_SECRET, { expiresIn: 3600 });
+    return jwt.sign({ data: id }, config.JWT_SECRET, { expiresIn: 60 * 30 });
 };
 
 var opts = {};
