@@ -37,6 +37,7 @@ async function initStorage() {
 /**Account routes */
 app.use("/account/register", require("./routes/account/register"));
 app.use("/account/login", require("./routes/account/login"));
+app.use(`/account/relogin`, authenticate.verifyUser, require(`./routes/account/relogin`));
 
 /**Course routes */
 app.use(`/course`, authenticate.verifyUser, require(`./routes/course/course`));
