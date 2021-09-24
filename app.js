@@ -31,7 +31,7 @@ app.use(passport.session());
 
 initStorage();
 async function initStorage() {
-    await storage.init({ expiredInterval: 1 * 60 * 60 * 1000 }); // run every hour to remove expired items
+    await storage.init({ expiredInterval: 1 * 60 * 30 * 1000 }); // run every 30mins to remove expired items
 }
 
 /**Account routes */
