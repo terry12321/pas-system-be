@@ -31,7 +31,7 @@ router.post("/", async (req, res, next) => {
         if (con) {
             await qp.rollbackAndCloseConnection(con);
         }
-        res.status(406).send(formatError(error.message, error.status));
+        res.status(406).send(formatError(error.status, error.message));
     }
 });
 
