@@ -59,36 +59,29 @@ opts.passReqToCallback = true;
 
 passport.use(
     new JwtStrategy(opts, async (req, jwt_payload, done) => {
+        let token = req.headers.authorization;
+        token = token.replace(`Bearer `, "");
+        let user = await storage.getDatum(token);
         try {
-            let token = req.headers.authorization;
-            token = token.replace(`Bearer `, "");
-            let user = await storage.getItem(token);
-            if (user === null || user === undefined) {
+            if (user === null || user === undefined || Object.keys(user).length === 0) {
                 throw new Error(`You are not authorized, please login again`);
             }
-            return done(null, user);
+            return done(null, user.value);
         } catch (err) {
             //catch if token expire or not generated
             // remove user
             // remove storage user
-            storage.removeItem(token);
+            await storage.removeItem(token);
             req.user = null;
-            console.log(err);
-            return done(err);
+            return done(err, null);
         }
     })
 );
 
-// exports.verifyUser = passport.authenticate("jwt", { session: false }, (err, user, info) => {
-//     if (!user) {
-//         return info;
-//     }
-// });
-
 exports.verifyUser = (req, res, next) => {
     passport.authenticate("jwt", { session: false }, (err, user, info) => {
         if (!user) {
-            res.status(401).json(formatError(401, info.message));
+            res.status(401).json(formatError(401, err.message));
         } else {
             req.user = user;
             next();
