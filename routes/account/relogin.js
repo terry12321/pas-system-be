@@ -13,22 +13,26 @@ router.post("/", async (req, res, next) => {
     let token = req.headers.authorization;
     token = token.replace(`Bearer `, ""); //get token
 
-    //check if req.user is null
-    if (user !== null) {
-        get_updated_user = await qp.selectFirst(`SELECT * FROM account WHERE id = ?`, [user.id]);
-        delete get_updated_user.password; //remove password
+    try {
+        //check if req.user is null
+        if (user !== null) {
+            get_updated_user = await qp.selectFirst(`SELECT * FROM account WHERE id = ?`, [user.id]);
+            delete get_updated_user.password; //remove password
+        }
+
+        let new_token = authenticate.getToken(); //resign and get new token
+        await storage.setItem(new_token, get_updated_user, { ttl: 60 * 10 }); //stores user in local storage
+        await storage.removeItem(token); //remove old token in local storage
+
+        let result = {
+            new_token,
+            ttl: 60 * 10
+        };
+
+        res.json(rb.build(result));
+    } catch (error) {
+        res.status(error.status).json(formatError(401, error.message));
     }
-
-    let new_token = authenticate.getToken(); //resign and get new token
-    await storage.setItem(new_token, get_updated_user, { ttl: 60 * 10 }); //stores user in local storage
-    await storage.removeItem(token); //remove old token in local storage
-
-    let result = {
-        token,
-        ttl: 60 * 10
-    };
-
-    res.json(rb.build(result));
 });
 
 module.exports = router;
