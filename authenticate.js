@@ -18,10 +18,15 @@ passport.use(
             if (!user) {
                 return done(createError(401, "Username not found!"), null);
             }
-
             const match = bcrypt.compareSync(password, user.password);
             if (user && match) {
-                const { password, ...result } = user;
+                let first_login = false;
+                if (password === "Passw0rd!@#") {
+                    first_login = true;
+                }
+                let { ...result } = user; //initialize result with user data
+                result.first_login = first_login; // add first_login check
+                delete result.password; //remove password from result
                 return done(null, result);
             }
             if (user.password !== password) {
