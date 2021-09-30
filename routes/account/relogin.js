@@ -25,7 +25,7 @@ router.post("/", async (req, res, next) => {
         await storage.removeItem(token); //remove old token in local storage
 
         let result = {
-            new_token,
+            token: new_token,
             ttl: 60 * 10
         };
 
