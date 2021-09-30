@@ -86,7 +86,11 @@ passport.use(
 exports.verifyUser = (req, res, next) => {
     passport.authenticate("jwt", { session: false }, (err, user, info) => {
         if (!user) {
-            res.status(401).json(formatError(401, err.message));
+            if (err) {
+                res.status(401).json(formatError(401, err.message));
+            } else {
+                res.status(401).json(formatError(401, info.message));
+            }
         } else {
             req.user = user;
             next();
