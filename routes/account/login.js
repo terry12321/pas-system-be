@@ -19,7 +19,8 @@ router.post("/", (req, res, next) => {
             let token = authenticate.getToken();
             let result = {
                 token,
-                ttl: 60 * 30
+                ttl: 60 * 30,
+                first_login: user.first_login
             };
 
             //Use token as the key and user as the value

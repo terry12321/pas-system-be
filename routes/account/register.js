@@ -13,15 +13,15 @@ router.post("/", async (req, res, next) => {
 
         const body = req.body;
         //check if user exists already
-        const exist = await qp.selectCheck(`account`, { username: body.username }, con);
-        if (exist) {
+        const exist = await qp.scalarFirst(`SELECT COUNT(*) FROM account WHERE username = ?`, [body.username], con);
+        if (exist && exist > 0) {
             throw createError(406, "Duplicate Account!");
         }
         const salt = await bcrypt.genSalt();
         const hash = await bcrypt.hash(body.password, salt);
         //Data access object
         let dao = {
-            username: body.username,
+            username: body.username.toLowerCase(),
             password: hash
         };
         const result = await qp.run(`INSERT INTO account SET ?`, [dao], con);
@@ -31,7 +31,7 @@ router.post("/", async (req, res, next) => {
         if (con) {
             await qp.rollbackAndCloseConnection(con);
         }
-        res.status(406).send(formatError(error.message, error.status));
+        res.status(406).send(formatError(error.status, error.message));
     }
 });
 

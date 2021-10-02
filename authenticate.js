@@ -18,10 +18,15 @@ passport.use(
             if (!user) {
                 return done(createError(401, "Username not found!"), null);
             }
-
             const match = bcrypt.compareSync(password, user.password);
             if (user && match) {
-                const { password, ...result } = user;
+                let first_login = false;
+                if (password === "Passw0rd!@#") {
+                    first_login = true;
+                }
+                let { ...result } = user; //initialize result with user data
+                result.first_login = first_login; // add first_login check
+                delete result.password; //remove password from result
                 return done(null, result);
             }
             if (user.password !== password) {
@@ -59,36 +64,33 @@ opts.passReqToCallback = true;
 
 passport.use(
     new JwtStrategy(opts, async (req, jwt_payload, done) => {
+        let token = req.headers.authorization;
+        token = token.replace(`Bearer `, "");
+        let user = await storage.getDatum(token);
         try {
-            let token = req.headers.authorization;
-            token = token.replace(`Bearer `, "");
-            let user = await storage.getItem(token);
-            if (user === null || user === undefined) {
+            if (user === null || user === undefined || Object.keys(user).length === 0) {
                 throw new Error(`You are not authorized, please login again`);
             }
-            return done(null, user);
+            return done(null, user.value);
         } catch (err) {
             //catch if token expire or not generated
             // remove user
             // remove storage user
-            storage.removeItem(token);
+            await storage.removeItem(token);
             req.user = null;
-            console.log(err);
-            return done(err);
+            return done(err, null);
         }
     })
 );
 
-// exports.verifyUser = passport.authenticate("jwt", { session: false }, (err, user, info) => {
-//     if (!user) {
-//         return info;
-//     }
-// });
-
 exports.verifyUser = (req, res, next) => {
     passport.authenticate("jwt", { session: false }, (err, user, info) => {
         if (!user) {
-            res.status(401).json(formatError(401, info.message));
+            if (err) {
+                res.status(401).json(formatError(401, err.message));
+            } else {
+                res.status(401).json(formatError(401, info.message));
+            }
         } else {
             req.user = user;
             next();
