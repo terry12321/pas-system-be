@@ -20,7 +20,8 @@ router.post("/", (req, res, next) => {
             let result = {
                 token,
                 ttl: 60 * 30,
-                first_login: user.first_login
+                first_login: user.first_login,
+                name: user.name
             };
 
             //Use token as the key and user as the value
