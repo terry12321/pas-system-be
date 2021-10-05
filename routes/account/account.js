@@ -54,9 +54,4 @@ router.post("/change_password", async (req, res, next) => {
     }
 });
 
-router.post("/logout", async (req, res, next) => {
-    await storage.clear();
-    res.send(rb.build("Logout successful!"));
-});
-
 module.exports = router;
