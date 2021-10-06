@@ -27,7 +27,10 @@ router.post("/relogin", async (req, res, next) => {
         let result = {
             token: new_token,
             ttl: 60 * 10,
-            name : get_updated_user.name
+            user: {
+                id : get_updated_user.id,
+                name : get_updated_user.name
+            }
         };
 
         res.json(rb.build(result));
