@@ -26,7 +26,11 @@ router.post("/relogin", async (req, res, next) => {
 
         let result = {
             token: new_token,
-            ttl: 60 * 10
+            ttl: 60 * 10,
+            user: {
+                id : get_updated_user.id,
+                name : get_updated_user.name
+            }
         };
 
         res.json(rb.build(result));
@@ -52,11 +56,6 @@ router.post("/change_password", async (req, res, next) => {
         }
         res.status(406).send(formatError(error.status, error.message));
     }
-});
-
-router.post("/logout", async (req, res, next) => {
-    await storage.clear();
-    res.send(rb.build("Logout successful!"));
 });
 
 module.exports = router;
