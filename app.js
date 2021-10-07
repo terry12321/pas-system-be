@@ -8,15 +8,11 @@ const passport = require("passport");
 const authenticate = require("./authenticate");
 const storage = require("node-persist");
 const cloudinary = require("cloudinary").v2;
-require("dotenv").config();
+const fs = require("fs");
+
+require("dotenv").config(); //This is to allow environment variable to be accessible
 
 qp.presetConnection(require(`./dbconfig.json`)); // Setting up connection to mysql
-// Setting up cloudinary for file uploads
-cloudinary.config({
-    cloud_name: process.env.CLOUD_NAME,
-    api_key: process.env.API_KEY,
-    api_secret: process.env.API_SECRET
-});
 
 /**Set up server to http and use express */
 var port = process.env.PORT || 4000;
@@ -25,6 +21,22 @@ var server = http.createServer(app);
 var corsOptions = {
     origin: "http://localhost:8080"
 };
+
+//================= Setting up for file uploads ===================
+cloudinary.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.API_KEY,
+    api_secret: process.env.API_SECRET
+});
+
+// Creating uploads folder if not already present
+// In "uploads" folder we will temporarily upload
+// image before uploading to cloudinary
+if (!fs.existsSync("./uploads")) {
+    fs.mkdirSync("./uploads");
+}
+
+//================= End of Setting up for file uploads ===================
 
 /**Initialise necessary npm(s)*/
 rb.setQpDriver(qp);
@@ -35,15 +47,16 @@ app.use(cors(corsOptions)); // parse requests of content-type - application/x-ww
 require("./authenticate"); //Need to require the authenticate module so that app.js knows about it
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-//limit file size
-app.use(
-    bodyParser.urlencoded({
-        limit: "500mb",
-        extended: true,
-        parameterLimit: 50000
-    })
-);
+// //limit file size
+// app.use(
+//     bodyParser.urlencoded({
+//         limit: "500mb",
+//         extended: true,
+//         parameterLimit: 50000
+//     })
+// );
 
 initStorage();
 async function initStorage() {
@@ -61,7 +74,7 @@ app.use("/account", authenticate.verifyUser, require("./routes/account/account")
 app.use(`/course`, authenticate.verifyUser, require(`./routes/course/course`));
 
 /**Upload routes*/
-app.use(`/upload`, require(`./routes/upload/upload`));
+app.use(`/upload`, authenticate.verifyUser, require(`./routes/upload/upload`));
 
 server.listen(port, () => {
     console.log(`Server is running on port ${port}!!`);
