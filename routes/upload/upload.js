@@ -20,33 +20,34 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.post("/", (req, res, next) => {
-    const form = new Formidable({ multiples: true });
-    form.parse(req, (err, fields, files) => {
-        cloudinary.uploader.upload(files, { html: { multiple: 1 } }, (error, result) => {
-            // output after the code is executed in terminal and browser
-            // successful output: metadata of file one after the other (name, type, size, etc)
-            console.log(result);
-            if (result) {
-                res.json(rb.build({}, "File Uploaded Succesfully"));
-            } else {
-                res.json(rb.buildError("file upload failed!", 500, error));
-            }
-        });
-    });
-    return;
+router.post("/", upload.single('file'), async (req, res, next) => {
+
+    try {
+        // req.file.path will have path of image
+        // stored in uploads folder
+        var locaFilePath = req.file.path;
+    
+        // Upload the local image to Cloudinary 
+        // and get image url as response
+        var result = await uploadToCloudinary(locaFilePath);
+    
+        res.json(rb.build({url:result.url},"File Uploaded Successfully!"));
+    } catch (error) {
+        res.send(rb.buildError(error));
+    }
+
 });
 
 //upload.array(fieldname,[maxCount])
-router.post("/multiple", upload.array("files", 12), async (req, res, next) => {
+router.post("/multiple", upload.array("file", 12), async (req, res, next) => {
     // req.files is array of `files` files
     // req.body will contain the text fields,
     // if there were any
-    // let con;
+    let con;
     try {
-        // con = await qp.connectWithTbegin();
+        con = await qp.connectWithTbegin();
         let imageUrlList = [];
-        // let daoList = [];
+        let daoList = [];
         for (let i = 0; i < req.files.length; i++) {
             const locaFilePath = req.files[i].path;
 
@@ -57,20 +58,21 @@ router.post("/multiple", upload.array("files", 12), async (req, res, next) => {
                 throw new Error(result.error_message);
             }
             imageUrlList.push(result.url);
-            // if (result.url) {
-            //     let dao = {
-            //         student_id: req.user.id,
-            //         document_url: result.url
-            //     };
-            //     daoList.push(await qp.run(`INSERT INTO student_document SET ?`, [dao], con));
-            // }
+            if (result.url) {
+                let dao = {
+                    student_id: req.user.id,
+                    document_url: result.url
+                };
+                daoList.push(qp.run(`INSERT INTO student_document SET ?`, [dao], con));
+            }
         }
-
-        res.json(rb.build(imageUrlList, "Files Upload Successful!"));
+        await Promise.all(daoList);
+        await qp.commitAndCloseConnection(con);
+        res.json(rb.build(imageUrlList, "Files Uploaded Successfully!"));
     } catch (error) {
-        // if (con) {
-        //     await qp.rollbackAndCloseConnection(con);
-        // }
+        if (con) {
+            await qp.rollbackAndCloseConnection(con);
+        }
         res.send(rb.buildError(error));
     }
 });
