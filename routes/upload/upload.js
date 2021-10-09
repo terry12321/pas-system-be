@@ -22,7 +22,9 @@ const upload = multer({ storage: storage });
 
 router.post("/", upload.single('file'), async (req, res, next) => {
 
+    let con;
     try {
+        con = await qp.connectWithTbegin();
         // req.file.path will have path of image
         // stored in uploads folder
         var locaFilePath = req.file.path;
@@ -30,9 +32,20 @@ router.post("/", upload.single('file'), async (req, res, next) => {
         // Upload the local image to Cloudinary 
         // and get image url as response
         var result = await uploadToCloudinary(locaFilePath);
-    
+        let dao = {
+            student_id: req.user.id,
+            document_url: result.url,
+            file_name: req.file.originalname
+        };
+        await qp.run(`DELETE FROM student_document WHERE student_id = ?`,[req.user.id],con);
+        await qp.run(`INSERT INTO student_document SET ?`, [dao], con);
+        // await qp.run(`UPDATE account SET documentURL = ? WHERE id = ?`,[result.url, req.user.id],con);
+        await qp.commitAndCloseConnection(con);
         res.json(rb.build({url:result.url},"File Uploaded Successfully!"));
     } catch (error) {
+        if(con){
+            await qp.rollbackAndCloseConnection(con);
+        }
         res.send(rb.buildError(error));
     }
 
