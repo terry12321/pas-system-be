@@ -50,7 +50,7 @@ router.post("/change_password", async (req, res, next) => {
         const user = req.user;
         const salt = await bcrypt.genSalt();
         const hash = await bcrypt.hash(body.password, salt);
-        const result = await qp.run(`UPDATE account SET password = ? WHERE id = ?`, [hash, user.id]);
+        const result = await qp.run(`UPDATE account SET password = ? WHERE id = ?`, [hash, user.id],con);
         await qp.commitAndCloseConnection(con);
         res.send(rb.build(result, "Password changed successfully!"));
     } catch (error) {
@@ -63,14 +63,70 @@ router.post("/change_password", async (req, res, next) => {
 
 //GET 1 specific student
 router.get("/:studentId", async (req, res, next) => {
-    const student = req.params;
+    const studentId = req.params.studentId;
     try {
-        var studentdetails = await qp.selectFirst(`SELECT * FROM account WHERE id = ?`, [student.studentId]);
-        console.log(studentdetails)
+        var studentdetails = await qp.selectFirst(
+            `SELECT 
+                *,
+                (SELECT 
+                        JSON_ARRAYAGG(JSON_OBJECT('subject_id',
+                                            sg.subject_id,
+                                            'grade',
+                                            sg.grade))
+                    FROM
+                        student_grades sg
+                            INNER JOIN
+                        account a ON sg.student_id = a.id
+                    WHERE
+                        a.id = 1) AS grades
+            FROM
+                account a
+                    LEFT JOIN
+                student_document sd ON a.id = sd.student_id
+            WHERE
+                a.id = 1`, [studentId]);
+        // var grades = await qp.select(`SELECT subject_id, grade FROM student_grades WHERE student_id = ?`,[studentId]);
+        // studentdetails.grades = grades;
+        res.json(rb.build(studentdetails));
+        
     } catch (error) {
         res.status(500).json(formatError(500, error.message));
     }
-    res.send(studentdetails);
 });//END
+
+
+//Update student details
+router.put(`/:studentId`, async(req,res,next)=>{
+    const body = req.body;
+    const id = req.params.studentId;
+    const {grades,...dto} = body;
+    let con;
+    try {
+        con = await qp.connectWithTbegin();
+        const acc_result = await qp.run(`UPDATE account SET ? WHERE id = ?`,[dto,id],con);
+        //delete student_grades and re-add them
+        await qp.run(`DELETE FROM student_grades WHERE student_id = ?`,[id],con);
+        let promise_list = [];
+        if(acc_result){
+            for(const eachGrade of grades){
+                let student_grade_dto = {
+                    student_id : id,
+                    subject_id : eachGrade.subject_id,
+                    grade : eachGrade.grade
+                }
+                promise_list.push(qp.run(`INSERT INTO student_grades SET ?`,[student_grade_dto],con));
+            }
+        }
+        await Promise.all(promise_list);
+        await qp.commitAndCloseConnection(con);
+        res.json(rb.build('Succesfully updated user!'));
+    } catch (error) {
+        if(con){
+            await qp.rollbackAndCloseConnection(con);
+        }
+        let status = error.status? error.status : 500;
+        res.status(status).send(formatError(status, error.message));
+    }
+})
 
 module.exports = router;
