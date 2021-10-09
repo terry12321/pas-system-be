@@ -7,6 +7,9 @@ const qp = require("@flexsolver/flexqp2");
 const bcrypt = require("bcrypt");
 const storage = require("node-persist");
 
+var itemRouter = express.Router({ mergeParams: true });
+router.use('/:studentId', itemRouter);
+
 router.post("/relogin", async (req, res, next) => {
     const user = req.user;
     let get_updated_user;
@@ -57,5 +60,17 @@ router.post("/change_password", async (req, res, next) => {
         res.status(406).send(formatError(error.status, error.message));
     }
 });
+
+//GET 1 specific student
+router.get("/:studentId", async (req, res, next) => {
+    const student = req.params;
+    try {
+        var studentdetails = await qp.selectFirst(`SELECT * FROM account WHERE id = ?`, [student.studentId]);
+        console.log(studentdetails)
+    } catch (error) {
+        res.status(500).json(formatError(500, error.message));
+    }
+    res.send(studentdetails);
+});//END
 
 module.exports = router;
