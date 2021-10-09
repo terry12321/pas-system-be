@@ -17,12 +17,16 @@ router.post("/", async (req, res, next) => {
         if (exist && exist > 0) {
             throw createError(406, "Duplicate Account!");
         }
+        if(!body.name || body.name === null){
+            throw createError(500, "Please add a name!");
+        }
         const salt = await bcrypt.genSalt();
         const hash = await bcrypt.hash(body.password, salt);
         //Data access object
         let dao = {
             username: body.username.toLowerCase(),
-            password: hash
+            password: hash,
+            name: body.name
         };
         const result = await qp.run(`INSERT INTO account SET ?`, [dao], con);
         await qp.commitAndCloseConnection(con);
