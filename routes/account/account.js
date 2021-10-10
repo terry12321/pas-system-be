@@ -6,6 +6,7 @@ const rb = require("@flexsolver/flexrb");
 const qp = require("@flexsolver/flexqp2");
 const bcrypt = require("bcrypt");
 const storage = require("node-persist");
+const createHttpError = require("http-errors");
 
 var itemRouter = express.Router({ mergeParams: true });
 router.use('/:studentId', itemRouter);
@@ -48,9 +49,16 @@ router.post("/change_password", async (req, res, next) => {
         con = await qp.connectWithTbegin();
         const body = req.body;
         const user = req.user;
-        const salt = await bcrypt.genSalt();
-        const hash = await bcrypt.hash(body.password, salt);
-        const result = await qp.run(`UPDATE account SET password = ? WHERE id = ?`, [hash, user.id],con);
+        const user_data = await qp.selectFirst(`SELECT * FROM account WHERE id = ?`, [user.id]);
+        const match = bcrypt.compareSync(body.current_password, user_data.password);
+        let result;
+        if(match){
+            const salt = await bcrypt.genSalt();
+            const hash = await bcrypt.hash(body.password, salt);
+            result = await qp.run(`UPDATE account SET password = ? WHERE id = ?`, [hash, user.id],con);
+        }else{
+            throw new createHttpError(406,'Current password is incorrect!');
+        }
         await qp.commitAndCloseConnection(con);
         res.send(rb.build(result, "Password changed successfully!"));
     } catch (error) {
