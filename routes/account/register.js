@@ -26,7 +26,14 @@ router.post("/", async (req, res, next) => {
         let dao = {
             username: body.username.toLowerCase(),
             password: hash,
-            name: body.name
+            name: body.name,
+            nric: body.nric,
+            email: body.email ? body.email : null,
+            mobile_no: body.mobile_no ? body.mobile_no : null,
+            home_no: body.home_no ? body.home_no : null,
+            home_address: body.home_address ? body.home_address : null,
+            postal_code: body.postal_code ? body.postal_code : null,
+            application_status: body.application_status ? body.application_status : null
         };
         const result = await qp.run(`INSERT INTO account SET ?`, [dao], con);
         await qp.commitAndCloseConnection(con);
