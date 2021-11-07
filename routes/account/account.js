@@ -86,13 +86,13 @@ router.get("/:studentId", async (req, res, next) => {
                             INNER JOIN
                         account a ON sg.student_id = a.id
                     WHERE
-                        a.id = 1) AS grades
+                        a.id = ?) AS grades
             FROM
                 account a
                     LEFT JOIN
                 student_document sd ON a.id = sd.student_id
             WHERE
-                a.id = 1`, [studentId]);
+                a.id = ?`, [studentId, studentId]);
         // var grades = await qp.select(`SELECT subject_id, grade FROM student_grades WHERE student_id = ?`,[studentId]);
         // studentdetails.grades = grades;
         res.json(rb.build(studentdetails));
