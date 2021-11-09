@@ -33,7 +33,7 @@ router.post("/", async (req, res, next) => {
 router.post("/get_one_course", async (req, res, next) => {
     const course = req.body;
     try {
-        var coursedetail = await qp.selectFirst(`SELECT * FROM course WHERE course_id = ?`, [course.course_id]);
+        var coursedetail = await qp.selectFirst(`SELECT * FROM course c join school s on c.school_id = s.school_id WHERE course_id = ?`, [course.course_id]);
         res.json(rb.build(coursedetail));
     } catch (error) {
         res.status(500).json(formatError(500, error.message));
